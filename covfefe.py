@@ -7,11 +7,11 @@ import xml.etree.ElementTree as ET
 import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-t", type=str, help="Sets the target host for the audit")
-parser.add_argument("-L", type=str, help="Sets a file to use as a list of targets")
-parser.add_argument("-R", action='store_true', help="Launch all recon tools")
-parser.add_argument("-S", action='store_true', help="Launch all scanning tools")
-parser.add_argument("-A", action='store_true', help="Launch all attack tools (requires scan data)")
+parser.add_argument("-t", type=str, help="sets the target host for the audit")
+parser.add_argument("-L", type=str, help="sets a file to use as a list of targets")
+parser.add_argument("-R", action='store_true', help="launch all recon tools")
+parser.add_argument("-S", action='store_true', help="launch all scanning tools")
+parser.add_argument("-A", action='store_true', help="launch all attack tools (requires nmap scan data)")
 args = parser.parse_args()
 
 lootpath = os.getenv("HOME") + "/.covfefe"
