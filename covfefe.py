@@ -272,6 +272,10 @@ def main():
 		printmsg("ERROR: Please specify either a target or a list!")
 		exit()
 
+	if (args.R and args.S and args.A) == False:
+		printmsg("ERROR: Please specify at least one mode to run!")
+		exit()
+
 	for host in targets:
 		time.sleep(1)
 
