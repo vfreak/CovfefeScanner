@@ -35,7 +35,7 @@ def banner():
 	print("-[-]-[-]            __\@@@@@@/__|  ~~~~~~  |        [-]-[-]-")
 	print("[-]-[-]            (____________|__________|         [-]-[-]")
 	print("-[-]-[-]           |_______________________|        [-]-[-]-")
-	print("[-]-[-]      Loot path:~/.covfefe                    [-]-[-]\n")
+	print("[-]-[-]               Loot path:~/.covfefe           [-]-[-]\n")
 
 def printmsg(msg):
 	print("\033c")
@@ -84,7 +84,7 @@ def leave():
 #
 
 def dnsenum(target):
-	printmsg("Running dnsenum against: {}".format(target))
+	printmsg("Running dnsenum against {}".format(target))
 	time.sleep(1)
 	output = osrun("dnsenum {} -f /usr/share/dnsenum/dns.txt -o {}/{}/.dnsenum.xml".format(target, lootpath, target))
 	f = open("{}/{}/dnsenum.txt".format(lootpath, target), "w+")
@@ -111,7 +111,7 @@ def portscan(target):
 	return filename
 
 def sshscan(target, port):
-	printmsg("Running ssh-audit against: {}".format(target))
+	printmsg("Running ssh-audit against {}".format(target))
 	time.sleep(1)
 	output = osrun("ssh-audit {} -p {}".format(target, port))
 	f = open("{}/{}/ssh-audit.txt".format(lootpath, target, target, port), "w+")
@@ -280,7 +280,8 @@ def main():
 		time.sleep(1)
 
 		if os.path.isdir("{}/{}".format(lootpath, host)):
-			if input("A loot folder already exist for this host. Overwite? y/N ").lower() != "y":
+			printmsg("A loot folder already exist for {}. Overwite? y/N ".format(host))
+			if input().lower() != "y":
 				continue
 		else:
 			osrun("mkdir {}/{}".format(lootpath, host))
