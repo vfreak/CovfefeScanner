@@ -19,6 +19,8 @@ lootpath = os.getenv("HOME") + "/.covfefe"
 userlist = "/usr/share/usernames.txt"
 passlist = "/usr/share/passwords.txt"
 
+requirements = ["dnsenum", "nmap", "ssh-audit", "sslscan", "curl", "nmap"]
+
 #
 # Boring formatting stuff that makes things somewhat bearable to look at.
 #
@@ -194,53 +196,14 @@ def install():
 	needed = []
 	time.sleep(0.5)
 
-	if os.path.isfile("/usr/bin/dnsenum"):
-		print("[x] dnsenum installed!")
-		time.sleep(0.5)
-	else:
-		print("[ ] dnsenum not installed!")
-		needed.append("sudo apt-get --assume-yes install dnsenum")
-		time.sleep(0.5)
-
-	if os.path.isfile("/usr/bin/nmap"):
-		print("[x] nmap installed!")
-		time.sleep(0.5)
-	else:
-		print("[ ] nmap not installed!")
-		needed.append("sudo apt-get --assume-yes install nmap")
-		time.sleep(0.5)
-
-	if os.path.isfile("/usr/bin/ssh-audit"):
-		print("[x] ssh-audit installed!")
-		time.sleep(0.5)
-	else:
-		print("[ ] ssh-audit not installed!")
-		needed.append("sudo apt-get --assume-yes install ssh-audit")
-		time.sleep(0.5)
-
-	if os.path.isfile("/usr/bin/sslscan"):
-		print("[x] sslscan installed!")
-		time.sleep(0.5)
-	else:
-		print("[] sslscan not installed!")
-		needed.append("sudo apt-get --assume-yes install sslscan")
-		time.sleep(0.5)
-
-	if os.path.isfile("/usr/bin/curl"):
-		print("[x] curl installed!")
-		time.sleep(0.5)
-	else:
-		print("[] curl not installed!")
-		needed.append("sudo apt-get --assume-yes install curl")
-		time.sleep(0.5)
-
-	if os.path.isfile("/usr/bin/ncrack"):
-		print("[x] ncrack installed!\n")
-		time.sleep(0.5)
-	else:
-		print("[ ] ncrack not installed!\n")
-		needed.append("sudo apt-get --assume-yes install ncrack")
-
+	for package in requirements:
+		if os.path.isfile("/usr/bin/{}".format(package)):
+			print("[x] {} installed!".format(package))
+			time.sleep(0.5)
+		else:
+			print("[ ] {} not installed!".format(package))
+			needed.append("sudo apt-get --assume-yes install {}".format(package))
+	
 	time.sleep(1)
 
 	if len(needed) != 0:
