@@ -35,7 +35,7 @@ def banner():
 	print("-[-]-[-]            __\@@@@@@/__|  ~~~~~~  |        [-]-[-]-")
 	print("[-]-[-]            (____________|__________|         [-]-[-]")
 	print("-[-]-[-]           |_______________________|        [-]-[-]-")
-	print("[-]-[-]      Loot path:~/.covfefe       [-]-[-]\n")
+	print("[-]-[-]      Loot path:~/.covfefe                    [-]-[-]\n")
 
 def printmsg(msg):
 	print("\033c")
@@ -86,7 +86,7 @@ def leave():
 def dnsenum(target):
 	printmsg("Running dnsenum against: {}".format(target))
 	time.sleep(1)
-	output = osrun("dnsenum {} -f /usr/share/dnsenum/dns.txt -o {}/{}/dnsenum.xml".format(target, lootpath, target))
+	output = osrun("dnsenum {} -f /usr/share/dnsenum/dns.txt -o {}/{}/.dnsenum.xml".format(target, lootpath, target))
 	f = open("{}/{}/dnsenum.txt".format(lootpath, target), "w+")
 	f.write(output)
 	f.close()
@@ -101,7 +101,7 @@ def dnsenum(target):
 def portscan(target):
 	printmsg("Running port scan against {}".format(target))
 	time.sleep(1)
-	filename = "{}/{}/nmap.xml".format(lootpath, target, target)
+	filename = "{}/{}/.nmap.xml".format(lootpath, target, target)
 	output = osrun("sudo nmap -sV -sC -O --open {} -oX {}".format(target, filename))
 	f = open("{}/{}/nmap.txt".format(lootpath, target, target), "w+")
 	f.write(output)
@@ -125,7 +125,20 @@ def sslscan(target, port):
 	printmsg("Running sslscan against {}".format(target))
 	time.sleep(1)
 	output = osrun("sslscan {}:{}".format(target, port))
-	f = open("{}/{}/sslscan".format(lootpath, target, target, port), "w+")
+	f = open("{}/{}/sslscan.txt".format(lootpath, target, target, port), "w+")
+	f.write(output)
+	f.close()
+	scrolltext(output)
+	time.sleep(1)
+
+def getheaders(target, port, https):
+	printmsg("Grabbing all http headers from {}".format(target))
+	if https:
+		output = osrun("curl --insecure -I https://{}:{}".format(target, port))
+	else:
+		output = osrun("curl -I http://{}:{}".format(target, port))
+	
+	f = open("{}/{}/headers-{}.txt".format(lootpath, target, port), "w+")
 	f.write(output)
 	f.close()
 	scrolltext(output)
@@ -147,7 +160,7 @@ def checkport(xmlfile, service):
 
 def bruteall(xmlfile, target):
 	printmsg("Running ncrack brute force against: {}".format(target))
-	output = osrun("ncrack -f -U {} -P {} -iX {} -v -oA {}/{}/ncrack".format(userlist, passlist, xmlfile, lootpath, target))
+	output = osrun("ncrack -f -U {} -P {} -iX {} -v -oN {}/{}/ncrack -oX {}/{}/.ncrack".format(userlist, passlist, xmlfile, lootpath, target, lootpath, target))
 	scrolltext(output)
 
 #
@@ -165,9 +178,12 @@ def scan(host):
 		sshscan(host, p)
 	for p in checkport(xml, "ssl"):
 		sslscan(host, p)
+		getheaders(host, p, True)
+	for p in checkport(xml, "http"):
+		getheaders(host, p, False)
 
 def attack(host):
-	bruteall("{}/{}/nmap.xml".format(lootpath, host, host), host)
+	bruteall("{}/{}/.nmap.xml".format(lootpath, host, host), host)
 
 #
 # Install function for distros with apt package managers.
@@ -208,6 +224,14 @@ def install():
 	else:
 		print("[] sslscan not installed!")
 		needed.append("sudo apt-get --assume-yes install sslscan")
+		time.sleep(0.5)
+
+	if os.path.isfile("/usr/bin/curl"):
+		print("[x] curl installed!")
+		time.sleep(0.5)
+	else:
+		print("[] curl not installed!")
+		needed.append("sudo apt-get --assume-yes install curl")
 		time.sleep(0.5)
 
 	if os.path.isfile("/usr/bin/ncrack"):
@@ -252,7 +276,7 @@ def main():
 		time.sleep(1)
 
 		if os.path.isdir("{}/{}".format(lootpath, host)):
-			if input("Scan data already exist for this host. Overwite? y/N ").lower() != "y":
+			if input("A loot folder already exist for this host. Overwite? y/N ").lower() != "y":
 				continue
 		else:
 			osrun("mkdir {}/{}".format(lootpath, host))
@@ -263,9 +287,9 @@ def main():
 		if args.S:
 			scan(host)
 
-		if args.A and os.path.exists("{}/{}/nmap.xml".format(lootpath, host, host)):
+		if args.A and os.path.exists("{}/{}/.nmap.xml".format(lootpath, host, host)):
 			attack(host)
-		else:
+		elif args.A:
 			printmsg("No scan data found for host: {}".format(host))
 		time.sleep(1)
 
