@@ -9,12 +9,12 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", type=str, help="Sets the target host for the audit")
 parser.add_argument("-L", type=str, help="Sets a file to use as a list of targets")
-parser.add_argument("-S", action='store_true', help="Launch all active scanning tools")
-parser.add_argument("-A", action='store_true', help="Launch all active attack tools (requires scan data)")
+parser.add_argument("-R", action='store_true', help="Launch all recon tools")
+parser.add_argument("-S", action='store_true', help="Launch all scanning tools")
+parser.add_argument("-A", action='store_true', help="Launch all attack tools (requires scan data)")
 args = parser.parse_args()
 
-lootpath = "/home/user/Loot/covfefe"
-current = ""
+lootpath = "/usr/share/covfefe/loot"
 
 userlist = "usernames.txt"
 passlist = "passwords.txt"
@@ -80,7 +80,22 @@ def leave():
 		exit()
 
 #
-# Functions for running various scans.
+# Functions for running various OSINT scans.
+#
+
+def dnsenum(target):
+	printmsg("Running dnsenum against: {}".format(target))
+	time.sleep(1)
+	output = osrun("dnsenum {} -f /usr/share/dns.txt -o {}/{}/dnsenum.xml".format(target, lootpath, target))
+	f = open("{}/{}/dnsenum.txt".format(lootpath, target), "w+")
+	f.write(output)
+	f.close()
+	flag = False
+	scrolltext(output)
+	time.sleep(1)
+
+#
+# Functions for running various service scans.
 #
 
 def portscan(target):
@@ -99,7 +114,7 @@ def sshscan(target, port):
 	printmsg("Running ssh-audit against: {}".format(target))
 	time.sleep(1)
 	output = osrun("ssh-audit {} -p {}".format(target, port))
-	f = open("{}/{}/ssh-audit".format(lootpath, target, target, port), "w+")
+	f = open("{}/{}/ssh-audit.txt".format(lootpath, target, target, port), "w+")
 	f.write(output)
 	f.close()
 	flag = False
@@ -131,7 +146,7 @@ def checkport(xmlfile, service):
 #
 
 def bruteall(xmlfile, target):
-	printmsg("Running ncrack brute force against: {}".format(host))
+	printmsg("Running ncrack brute force against: {}".format(target))
 	output = osrun("ncrack -f -U {} -P {} -iX {} -v -oA {}/{}/ncrack".format(userlist, passlist, xmlfile, lootpath, target))
 	scrolltext(output)
 
@@ -139,16 +154,20 @@ def bruteall(xmlfile, target):
 # Functions for running groups of modules.
 #
 
+def recon(host):
+	dnsenum(host)
+
+
 def scan(host):
 	xml = portscan(host)
 
-	for p in checkport(xml, host, "ssh"):
+	for p in checkport(xml, "ssh"):
 		sshscan(host, p)
-	for p in checkport(xml, host, "ssl"):
+	for p in checkport(xml, "ssl"):
 		sslscan(host, p)
 
 def attack(host):
-	bruteall("{}/{}/nmap.xml".format(lootpath, host, host), host, "usernames.txt", "passwords.txt")
+	bruteall("{}/{}/nmap.xml".format(lootpath, host, host), host)
 
 #
 # Install function for distros with apt package managers.
@@ -158,6 +177,14 @@ def install():
 	printmsg("Checking for required tools and modules.")
 	needed = []
 	time.sleep(0.5)
+
+	if os.path.isfile("/usr/bin/dnsenum"):
+		print("[x] dnsenum installed!")
+		time.sleep(0.5)
+	else:
+		print("[ ] dnsenum not installed!")
+		needed.append("sudo apt-get --assume-yes install dnsenum")
+		time.sleep(0.5)
 
 	if os.path.isfile("/usr/bin/nmap"):
 		print("[x] nmap installed!")
@@ -171,16 +198,24 @@ def install():
 		print("[x] ssh-audit installed!")
 		time.sleep(0.5)
 	else:
-		print("[ ] ssh-audit not installed!\n")
+		print("[ ] ssh-audit not installed!")
 		needed.append("sudo apt-get --assume-yes install ssh-audit")
 		time.sleep(0.5)
 
 	if os.path.isfile("/usr/bin/sslscan"):
-		print("[x] sslscan installed!\n")
+		print("[x] sslscan installed!")
 		time.sleep(0.5)
 	else:
 		print("[] sslscan not installed!")
 		needed.append("sudo apt-get --assume-yes install sslscan")
+		time.sleep(0.5)
+
+	if os.path.isfile("/usr/bin/ncrack"):
+		print("[x] ncrack installed!\n")
+		time.sleep(0.5)
+	else:
+		print("[ ] ncrack not installed!\n")
+		needed.append("sudo apt-get --assume-yes install ncrack")
 
 	time.sleep(1)
 
@@ -215,12 +250,15 @@ def main():
 
 	for host in targets:
 		time.sleep(1)
-		if os.path.isdir("{}/{}".format(lootpath, host)) == False:
+
+		if os.path.exists("{}/{}".format(lootpath, host)):
+			if input("Scan data already exist for this host. Overwite? y/N ").lower() != "y":
+				continue
+		else:
 			osrun("mkdir {}/{}".format(lootpath, host))
-		
-		if args.S and os.path.exists("{}/{}/nmap.xml".format(lootpath, host, host)):
-			printmsg("Scan data already exist for this host. Overwite?")
-			leave()	
+
+		if args.R:
+			recon(host)
 		
 		if args.S:
 			scan(host)
