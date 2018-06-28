@@ -14,10 +14,10 @@ parser.add_argument("-S", action='store_true', help="Launch all scanning tools")
 parser.add_argument("-A", action='store_true', help="Launch all attack tools (requires scan data)")
 args = parser.parse_args()
 
-lootpath = "/usr/share/covfefe/loot"
+lootpath = os.getenv("HOME") + "/.covfefe"
 
-userlist = "usernames.txt"
-passlist = "passwords.txt"
+userlist = "/usr/share/usernames.txt"
+passlist = "/usr/share/passwords.txt"
 
 #
 # Boring formatting stuff that makes things somewhat bearable to look at.
@@ -35,7 +35,7 @@ def banner():
 	print("-[-]-[-]            __\@@@@@@/__|  ~~~~~~  |        [-]-[-]-")
 	print("[-]-[-]            (____________|__________|         [-]-[-]")
 	print("-[-]-[-]           |_______________________|        [-]-[-]-")
-	print("[-]-[-]      Loot path:/usr/share/covfefe/loot       [-]-[-]\n")
+	print("[-]-[-]      Loot path:~/.covfefe       [-]-[-]\n")
 
 def printmsg(msg):
 	print("\033c")
@@ -86,7 +86,7 @@ def leave():
 def dnsenum(target):
 	printmsg("Running dnsenum against: {}".format(target))
 	time.sleep(1)
-	output = osrun("dnsenum {} -f /usr/share/dns.txt -o {}/{}/dnsenum.xml".format(target, lootpath, target))
+	output = osrun("dnsenum {} -f /usr/share/dnsenum/dns.txt -o {}/{}/dnsenum.xml".format(target, lootpath, target))
 	f = open("{}/{}/dnsenum.txt".format(lootpath, target), "w+")
 	f.write(output)
 	f.close()
@@ -251,7 +251,7 @@ def main():
 	for host in targets:
 		time.sleep(1)
 
-		if os.path.exists("{}/{}".format(lootpath, host)):
+		if os.path.isdir("{}/{}".format(lootpath, host)):
 			if input("Scan data already exist for this host. Overwite? y/N ").lower() != "y":
 				continue
 		else:

@@ -1,11 +1,13 @@
 #!/bin/bash
 
+mkdir ~/.covfefe
+
 if [[ $EUID -ne 0 ]]; then
-	echo "This script must be ran as root"
-	exit 1
+	echo "This script must be ran as sudo/root"
 fi
 
-cp covfefe /usr/bin/covfefe
-mkdir /usr/share/covfefe
-mkdir /usr/share/covfefe/loot
-cp {usernames.txt,passwords.txt, LICENSE} /usr/share/covfefe
+sudo mkdir /usr/share/covfefe
+sudo cp $PWD/covfefe.py /usr/bin/covfefe
+sudo cp $PWD/usernames.txt /usr/share/covfefe
+sudo cp $PWD/passwords.txt /usr/share/covfefe
+sudo cp $PWD/LICENSE /usr/share/covfefe
